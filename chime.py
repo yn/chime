@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import objc, sys, random, inspect, os
 from Foundation import *
 from AppKit import *
