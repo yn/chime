@@ -21,54 +21,60 @@ def datetime_to_chime(dt):
   else:
     return (["Submarine"], quarter_hour_chime)
 
-def base_url():
+#Example of how to call functions from an applescript. Way too complicated to bother.
+#https://developer.apple.com/library/mac/technotes/tn2084/_index.html#//apple_ref/doc/uid/DTS10004052-CH1-SECTION6
+
+def fade_down_script():
+  nsa = NSAppleScript.alloc()
   b = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-  return NSURL.fileURLWithPath_(b)
-
-def get_volume_down_script():
-  nsa = NSAppleScript.alloc()
-  s = NSURL.URLWithString_relativeToURL_("volume_down.scpt", base_url()).absoluteURL()
+  base_url = NSURL.fileURLWithPath_(b)
+  s = NSURL.URLWithString_relativeToURL_("fade_down.applescript", base_url).absoluteURL()
   return nsa.initWithContentsOfURL_error_(s, None)[0]
 
-def get_volume_up_script():
+def fade_up_script():
   nsa = NSAppleScript.alloc()
-  s = NSURL.URLWithString_relativeToURL_("volume_up.scpt", base_url()).absoluteURL()
+  b = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+  base_url = NSURL.fileURLWithPath_(b)
+  s = NSURL.URLWithString_relativeToURL_("fade_up.applescript", base_url).absoluteURL()
   return nsa.initWithContentsOfURL_error_(s, None)[0]
 
-class Chimey(NSObject):
-  sound_names = ["Basso", "Blow", "Bottle", "Frog", "Funk", "Glass", "Hero",
-                 "Morse", "Ping", "Pop", "Purr", "Sosumi", "Submarine", "Tink"]
-  sounds = {}
-  
-  def applicationDidFinishLaunching_(self, notification):
-    get_volume_down_script().executeAndReturnError_(None)
-    random.seed()
-    for name in self.sound_names:
-      self.sounds[name] = NSSound.soundNamed_(name)
-      self.sounds[name].setDelegate_(self)
-    (self.sequence, self.count) = datetime_to_chime(datetime.now())
-    if not self.play(None):
-      raise Exception("Error playing sound first time")
+try:
+  objc.lookUpClass("Chimey")
+except:  
+  class Chimey(NSObject):
+    sound_names = ["Basso", "Blow", "Bottle", "Frog", "Funk", "Glass", "Hero",
+                   "Morse", "Ping", "Pop", "Purr", "Sosumi", "Submarine", "Tink"]
+    sounds = {}
 
-  def play(self, previous):
-    if len(self.sequence) == 1:
-      sound = self.sounds[self.sequence[0]]
-    else:
-      sound = previous
-      while (sound == previous):
-        sound = self.sounds[random.choice(self.sequence)]
-    return sound.play()
+    def applicationDidFinishLaunching_(self, notification):
+      fade_down_script().executeAndReturnError_(None)
+      random.seed()
+      for name in self.sound_names:
+        self.sounds[name] = NSSound.soundNamed_(name)
+        self.sounds[name].setDelegate_(self)
+      (self.sequence, self.count) = datetime_to_chime(datetime.now())
+      if not self.play(None):
+        raise Exception("Error playing sound first time")
 
-  def sound_didFinishPlaying_(self, sound, finishedPlaying):
-    if finishedPlaying:
-      self.count -= 1
-      if self.count <= 0:
-        get_volume_up_script().executeAndReturnError_(None)
-        AppHelper.stopEventLoop()
-      elif not self.play(sound):
-        raise Exception("Error playing sound")
-    else:
-      raise("sound_didFinishPlaying_ called with finishedPlaying = False")
+    def play(self, previous):
+      if len(self.sequence) == 1:
+        sound = self.sounds[self.sequence[0]]
+      else:
+        sound = previous
+        while (sound == previous):
+          sound = self.sounds[random.choice(self.sequence)]
+      return sound.play()
+
+    def sound_didFinishPlaying_(self, sound, finishedPlaying):
+      if finishedPlaying:
+        self.count -= 1
+        if self.count <= 0:
+          fade_up_script().executeAndReturnError_(None)
+  #        AppHelper.stopEventLoop()
+        elif not self.play(sound):
+          raise Exception("Error playing sound")
+      else:
+        raise("sound_didFinishPlaying_ called with finishedPlaying = False")
    
 def main():
   try:
