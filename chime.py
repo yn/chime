@@ -70,22 +70,22 @@ except:
         self.count -= 1
         if self.count <= 0:
           fade_up_script().executeAndReturnError_(None)
-  #        AppHelper.stopEventLoop()
+          AppHelper.stopEventLoop()
         elif not self.play(sound):
           raise Exception("Error playing sound")
       else:
         raise("sound_didFinishPlaying_ called with finishedPlaying = False")
    
 def main():
-  try:
-    import IPython
-    ipython_available = True
-  except ImportError as e:
-    ipython_available = False
-  if ipython_available:
-    import threading
-    #args=[[]] is very important here, otherwise ipython tries to run things from the commandline
-    threading.Thread(target=IPython.start_ipython, args=[[]]).start()
+  # try:
+  #   import IPython
+  #   ipython_available = True
+  # except ImportError as e:
+  #   ipython_available = False
+  # if ipython_available:
+  #   import threading
+  #   #args=[[]] is very important here, otherwise ipython tries to run things from the commandline
+  #   threading.Thread(target=IPython.start_ipython, args=[[]]).start()
   app = NSApplication.sharedApplication()
   delegate = Chimey.alloc().init()
   app.setDelegate_(delegate)
